@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Davomat</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-secondary-bg-color, #f3f5f9);
+    --card: var(--tg-theme-bg-color, #ffffff);
+    --text: var(--tg-theme-text-color, #16202e);
+    --muted: var(--tg-theme-hint-color, #6b7686);
+    --brand: var(--tg-theme-button-color, #2481cc);
+    --brand-text: var(--tg-theme-button-text-color, #ffffff);
+    --line: rgba(128,128,128,.18);
+    --soft: rgba(128,128,128,.10);
+    --green: #16a34a; --green-bg: rgba(22,163,74,.13);
+    --orange: #ea7a0c; --orange-bg: rgba(234,122,12,.14);
+    --red: #dc2626; --red-bg: rgba(220,38,38,.12);
+    --blue-bg: rgba(36,129,204,.13);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 14px 14px 40px; }
+  header { display: flex; justify-content: space-between; align-items: center; margin: 2px 2px 12px; }
+  header h1 { font-size: 21px; margin: 0; }
+  #clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; text-align: right; line-height: 1.3; }
+  #clock b { color: var(--text); font-size: 15px; }
+  .card { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 12px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  h2 { font-size: 19px; margin: 0 0 2px; }
+  button { font: inherit; border: 0; cursor: pointer; color: inherit; }
+  .btn { width: 100%; padding: 14px; border-radius: 12px; background: var(--brand); color: var(--brand-text); font-weight: 600; font-size: 16px; }
+  .btn.ghost { background: var(--soft); color: var(--brand); }
+  .btn.danger { background: var(--red-bg); color: var(--red); }
+  .btn:disabled { opacity: .5; }
+  .hidden { display: none !important; }
+  .seg { display: flex; gap: 4px; background: var(--card); padding: 4px; border-radius: 12px; margin-bottom: 12px; }
+  .seg button, .tabs button { flex: 1; padding: 9px; border-radius: 9px; background: none; color: var(--muted); font-weight: 600; font-size: 15px; }
+  .seg button.on { background: var(--brand); color: var(--brand-text); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 4px; }
+  .tile { background: var(--soft); border-radius: 12px; padding: 11px 12px; }
+  .tile b { display: block; font-size: 23px; font-variant-numeric: tabular-nums; }
+  .big { display: block; width: 200px; height: 200px; margin: 20px auto 8px; border-radius: 50%;
+         color: #fff; font-size: 25px; font-weight: 800; letter-spacing: 1px;
+         box-shadow: 0 10px 28px rgba(0,0,0,.18); transition: transform .1s; }
+  .big:active { transform: scale(.96); }
+  .big small { display: block; font-size: 13px; font-weight: 500; opacity: .92; letter-spacing: 0; margin-top: 4px; }
+  .big.in { background: var(--green); } .big.out { background: var(--orange); }
+  .big.done, .big:disabled { background: #9aa4b2; box-shadow: none; }
+  .center { text-align: center; }
+  .msg { border-radius: 12px; padding: 13px; margin-top: 12px; font-weight: 500; font-size: 15px; }
+  .msg.ok { background: var(--green-bg); color: var(--green); }
+  .msg.warn { background: var(--orange-bg); color: var(--orange); }
+  .msg.err { background: var(--red-bg); color: var(--red); }
+  .tiles3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+  .tiles3 .tile b { font-size: 17px; }
+  .tile.debt { background: var(--red-bg); } .tile.debt b { color: var(--red); }
+  .g { color: var(--green); } .r { color: var(--red); }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); gap: 8px; }
+  .row:last-child { border-bottom: 0; }
+  .row.sm { padding: 8px 0; font-size: 14px; }
+  .row.click { cursor: pointer; }
+  details summary { cursor: pointer; color: var(--brand); font-size: 14px; padding: 6px 0; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { background: var(--soft); border-radius: 12px; padding: 10px; text-align: center; }
+  .stat b { display: block; font-size: 23px; }
+  .tabs { display: flex; gap: 4px; background: var(--soft); padding: 4px; border-radius: 12px; margin-top: 14px; }
+  .tabs button { font-size: 14px; padding: 8px 4px; }
+  .tabs button.on { background: var(--card); color: var(--text); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 99px; background: var(--soft); color: var(--muted); }
+  .chip.on { background: var(--brand); color: var(--brand-text); }
+  .pill { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
+  .p-in { background: var(--green-bg); color: var(--green); } .p-out { background: var(--soft); color: var(--muted); }
+  .p-late { background: var(--orange-bg); color: var(--orange); } .p-no { background: var(--red-bg); color: var(--red); }
+  .p-rux { background: var(--blue-bg); color: var(--brand); }
+  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-weight: 500; }
+  .r-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .btns { display: flex; gap: 6px; }
+  .sbtn { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; background: var(--soft); color: var(--brand); }
+  .sbtn.pay { color: var(--green); }
+  .payform { display: flex; gap: 8px; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+  .payform input { margin: 0; flex: 1; }
+  .payform .btn { width: auto; padding: 10px 16px; font-size: 15px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+  input, select { width: 100%; font: inherit; font-size: 16px; padding: 12px; border-radius: 11px; border: 1px solid var(--line);
+                  background: var(--soft); color: var(--text); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { padding: 8px 3px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; font-size: 11.5px; }
+  .spin { display: inline-block; width: 22px; height: 22px; border: 3px solid rgba(128,128,128,.3);
+          border-top-color: var(--brand); border-radius: 50%; animation: s 1s linear infinite; vertical-align: -5px; }
+  .big .spin { border-color: rgba(255,255,255,.4); border-top-color: #fff; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .sec { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+  a.lnk { color: var(--brand); text-decoration: none; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>📍 Davomat</h1><div id="clock"></div></header>
+
+  <div id="seg" class="seg hidden">
+    <button class="on" data-v="vMain">Men</button><button data-v="vAdmin">Admin panel</button>
+  </div>
+
+  <!-- yuklanmoqda -->
+  <section id="vLoad" class="card center"><p><span class="spin"></span></p><p class="muted">Yuklanmoqda…</p></section>
+
+  <!-- xato -->
+  <section id="vErr" class="card hidden">
+    <h2>Ochib bo'lmadi</h2>
+    <div id="errText" class="msg err"></div>
+    <button class="btn" style="margin-top:14px" onclick="start()">Qayta urinish</button>
+  </section>
+
+  <!-- ro'yxatdan o'tmagan -->
+  <section id="vReg" class="card hidden">
+    <h2>Ro'yxatdan o'tmagansiz</h2>
+    <p class="muted">Botga qayting, <b>/start</b> ni bosing va <b>“📱 Telefon raqamni yuborish”</b> tugmasi orqali raqamingizni yuboring. Raqamingiz admin kiritgan ro'yxatda bo'lsa, ilova ochiladi.</p>
+    <button class="btn" id="bToBot">Botga qaytish</button>
+  </section>
+
+  <!-- XODIM -->
+  <section id="vMain" class="card hidden">
+    <h2 id="hello"></h2>
+    <div class="muted" id="shift"></div>
+    <div class="tiles">
+      <div class="tile"><span class="muted">Keldi</span><b id="tIn">—</b></div>
+      <div class="tile"><span class="muted">Ketdi</span><b id="tOut">—</b></div>
+    </div>
+    <button class="big in" id="bMark">KELDIM</button>
+    <div class="muted center" id="hint">Belgi faqat ish joyida qo'yiladi</div>
+    <div id="mainMsg"></div>
+    <div id="fines"></div>
+  </section>
+  <input type="file" id="cam" accept="image/*" capture="user" class="hidden">
+
+  <!-- ADMIN -->
+  <section id="vAdmin" class="hidden">
+    <div class="card">
+      <div class="muted" id="aWho"></div>
+      <h2>Bugun, <span id="aDate"></span></h2>
+      <div id="flt" class="chips"></div>
+      <div class="stats">
+        <div class="stat"><b id="sIn">0</b><span class="muted">Keldi</span></div>
+        <div class="stat"><b id="sLate">0</b><span class="muted">Kechikdi</span></div>
+        <div class="stat"><b id="sNo">0</b><span class="muted">Yo'q</span></div>
+      </div>
+      <div class="tabs" id="tabs">
+        <button class="on" data-t="tToday">Bugun</button><button data-t="tMonth">Oylik</button>
+        <button data-t="tStaff">Xodimlar</button><button data-t="tPlaces">Joylar</button>
+      </div>
+      <div id="tToday" class="tab"></div>
+      <div id="tMonth" class="tab hidden"></div>
+      <div id="tStaff" class="tab hidden">
+        <div id="staffList"></div>
+        <div id="staffForm" class="hidden">
+          <h2 id="fTitle" style="margin-top:14px">Yangi xodim</h2>
+          <label>Ism familiya</label><input id="fIsm" autocomplete="off">
+          <label>Telefon raqam (Telegram'dagi)</label><input id="fTel" type="tel" placeholder="+998 90 123 45 67">
+          <div class="two">
+            <div><label>Ish boshlanishi</label><input id="fStart" type="time" value="09:00"></div>
+            <div><label>Ish tugashi</label><input id="fEnd" type="time" value="18:00"></div>
+          </div>
+          <label>Bo'lim</label><input id="fBolim" list="bolimList" placeholder="Ofis, Sex, Montaj, Servis" autocomplete="off">
+          <datalist id="bolimList"></datalist>
+          <label>Qayerda belgi qo'yadi</label><select id="fJoy"></select>
+          <div id="formMsg"></div>
+          <button class="btn" id="fSave" style="margin-top:14px">Saqlash</button>
+          <div class="two" style="margin-top:8px">
+            <button class="btn ghost" id="fCancel">Bekor qilish</button>
+            <button class="btn danger" id="fDel">O'chirish</button>
+          </div>
+        </div>
+      </div>
+      <div id="tPlaces" class="tab hidden">
+        <div id="placeList" style="margin-top:8px"></div>
+        <p class="muted" style="margin-top:14px">Yangi joy qo'shish yoki yangilash: o'sha joyda turib nomini yozing va tugmani bosing.</p>
+        <input id="placeName" placeholder="Joy nomi: Ofis yoki Sex" autocomplete="off">
+        <button class="btn" id="bPlace" style="margin-top:10px">📍 Hozirgi joyni saqlash</button>
+        <div id="placeMsg"></div>
+      </div>
+    </div>
+    <div class="center"><a class="lnk" href="#" id="bRefresh">↻ Yangilash</a></div>
+  </section>
+</div>
+
+<script>
+  // ===== SOZLAMA: Apps Script havolasi (…/exec) =====
+  var API = "https://script.google.com/macros/s/AKfycbze6GXwhiTRJ3BPO2mCdWaVQj8xSDu6UWGy1fA7FyhmW34oEqG8mGze9IPGLL-mABM/exec";
+
+  var tg = window.Telegram && Telegram.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+  var $ = function (id) { return document.getElementById(id); };
+  var ME = null, AD = null, SELFI = false, BOT = "", LAST = null, FILTER = "Hammasi", EDIT = null;
+
+  // ---------- yordamchi ----------
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function sum(n) { return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function msg(el, text, kind) { $(el).innerHTML = text ? '<div class="msg ' + kind + '">' + esc(text) + "</div>" : ""; }
+  function haptic(t) { try { tg.HapticFeedback.notificationOccurred(t); } catch (e) {} }
+  function open(url) { try { tg.openLink(url); } catch (e) { window.open(url, "_blank"); } }
+  var views = ["vLoad", "vErr", "vReg", "vMain", "vAdmin"];
+  function show(v) {
+    views.forEach(function (x) { $(x).classList.toggle("hidden", x !== v); });
+    document.querySelectorAll("#seg button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === v); });
+  }
+  function api(action, extra) {
+    var body = Object.assign({ action: action, initData: tg ? tg.initData : "" }, extra || {});
+    return fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.error || "Xatolik"); return j.data; })
+      .catch(function (e) { throw new Error(e.message === "Failed to fetch" || e.message === "Load failed" ? "Internet aloqasini tekshiring" : e.message); });
+  }
+  function tick() {
+    var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    $("clock").innerHTML = "<b>" + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + "</b><br>" +
+      p(d.getDate()) + "." + p(d.getMonth() + 1) + "." + d.getFullYear();
+  }
+  setInterval(tick, 1000); tick();
+
+  // ---------- joylashuv (Telegram LocationManager yoki brauzer GPS) ----------
+  function getLoc() {
+    return new Promise(function (resolve, reject) {
+      function browser() {
+        if (!navigator.geolocation) return reject(new Error("Telefoningiz GPS'ni qo'llamaydi"));
+        navigator.geolocation.getCurrentPosition(function (p) {
+          resolve({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy });
+        }, function (e) {
+          reject(new Error(e.code === 1 ? "Joylashuvga ruxsat bering (telefon sozlamalarida Telegram uchun Location ni yoqing)." :
+                                         "GPS aniqlanmadi. Joylashuv yoqilganini tekshirib, qayta bosing."));
+        }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+      }
+      var LM = tg && tg.LocationManager;
+      if (!LM || !tg.isVersionAtLeast || !tg.isVersionAtLeast("8.0")) return browser();
+      LM.init(function () {
+        if (!LM.isLocationAvailable) return browser();
+        LM.getLocation(function (loc) {
+          if (loc) return resolve({ lat: loc.latitude, lng: loc.longitude, acc: loc.horizontal_accuracy || 30 });
+          if (LM.isAccessRequested && !LM.isAccessGranted) {
+            try { LM.openSettings(); } catch (e) {}
+            return reject(new Error("Joylashuvga ruxsat bering va qayta bosing."));
+          }
+          browser();
+        });
+      });
+    });
+  }
+
+  // ---------- selfi: kameradan rasm, kichraytirib yuborish ----------
+  function shrink(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var k = Math.min(1, 640 / Math.max(img.width, img.height));
+        var c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL("image/jpeg", 0.7).split(",")[1]);
+      };
+      img.onerror = function () { reject(new Error("Rasmni o'qib bo'lmadi, qayta urinib ko'ring")); };
+      img.src = url;
+    });
+  }
+
+  // ---------- start ----------
+  function start() {
+    show("vLoad");
+    if (!tg || !tg.initData) {
+      $("errText").textContent = "Bu ilova Telegram bot ichida ochiladi. Botga kirib «📍 Davomat» tugmasini bosing.";
+      return show("vErr");
+    }
+    api("boshlash").then(function (d) {
+      BOT = d.bot || BOT;
+      if (!d.royxatda) return show("vReg");
+      ME = d.xodim; AD = d.admin; SELFI = !!d.selfi;
+      $("seg").classList.toggle("hidden", !(ME && AD));
+      if (ME) { render(ME); show("vMain"); }
+      if (AD) loadAdmin(!ME);
+    }).catch(function (e) { $("errText").textContent = e.message; show("vErr"); });
+  }
+  $("bToBot").onclick = function () { if (BOT) tg.openTelegramLink("https://t.me/" + BOT + "?start=reg"); tg.close(); };
+  document.querySelectorAll("#seg button").forEach(function (b) {
+    b.onclick = function () { show(b.dataset.v); if (b.dataset.v === "vAdmin" && !LAST) loadAdmin(true); };
+  });
+
+  // ---------- xodim ----------
+  function render(s) {
+    ME = s;
+    $("hello").textContent = "Salom, " + s.name + "!";
+    $("shift").textContent = "Ish vaqti: " + (s.start || "—") + (s.end ? " – " + s.end : "");
+    $("tIn").textContent = s.keldi || "—";
+    $("tOut").textContent = s.ketdi || "—";
+    var b = $("bMark");
+    b.disabled = false; b.className = "big";
+    if (s.dayOff) { b.classList.add("done"); b.disabled = true; b.innerHTML = "DAM OLISH<small>Bugun ishlanmaydi</small>"; }
+    else if (s.status === "KETDI") { b.classList.add("done"); b.disabled = true; b.innerHTML = "✓ TUGADI<small>Bugun uchun rahmat</small>"; }
+    else if (s.status === "KELDI") { b.classList.add("out"); b.innerHTML = "KETDIM<small>ishdan chiqish</small>"; }
+    else if (s.status === "RUXSAT") { b.classList.add("in"); b.innerHTML = "KELDIM<small>rahbar ruxsat bergan</small>"; }
+    else if (s.status === "KELMADI") { b.classList.add("in"); b.innerHTML = "KELDIM<small>juda kech qoldingiz</small>"; }
+    else { b.classList.add("in"); b.innerHTML = "KELDIM<small>ishga keldim</small>"; }
+    $("hint").textContent = "Belgi faqat ish joyida qo'yiladi" + (SELFI ? " · selfi olinadi 📷" : "");
+    renderFines(s);
+  }
+
+  function renderFines(s) {
+    var h = '<div class="sec"><b>Jarimalarim</b><div class="tiles3">' +
+      '<div class="tile"><span class="muted">Jami</span><b>' + sum(s.jami) + '</b></div>' +
+      '<div class="tile"><span class="muted">To\'langan</span><b class="g">' + sum(s.tolangan) + '</b></div>' +
+      '<div class="tile ' + (s.qarz > 0 ? "debt" : "") + '"><span class="muted">Qarz</span><b>' + sum(s.qarz) + '</b></div></div>';
+    if ((s.jarimalar || []).length || (s.tolovlar || []).length) {
+      h += '<details><summary>Tarix: ' + s.jarimalar.length + ' ta jarima, ' + s.tolovlar.length + ' ta to\'lov</summary>';
+      s.tolovlar.forEach(function (t) {
+        h += '<div class="row sm"><div>' + esc(t.sana) + '<div class="muted">to\'lov' + (t.kim ? " · " + esc(t.kim) : "") + '</div></div><b class="g">−' + sum(t.summa) + '</b></div>';
+      });
+      s.jarimalar.forEach(function (j) {
+        var why = j.holat === "KELMADI" ? "kelmadi" : (j.kech > 0 ? j.kech + " daq kechikdi" : "jarima");
+        h += '<div class="row sm"><div>' + esc(j.sana) + '<div class="muted">' + why + '</div></div><b class="r">+' + sum(j.summa) + '</b></div>';
+      });
+      h += '</details>';
+    } else h += '<p class="muted">Jarimalar yo\'q 👍</p>';
+    $("fines").innerHTML = h + '</div>';
+  }
+
+  var keep = "";
+  function busy(text) { var b = $("bMark"); keep = b.innerHTML; b.disabled = true; b.innerHTML = '<span class="spin"></span><small>' + text + '</small>'; }
+  function unbusy() { var b = $("bMark"); b.innerHTML = keep; b.disabled = false; }
+
+  function mark(selfi) {
+    busy("Joylashuv aniqlanmoqda…");
+    getLoc().then(function (loc) {
+      $("bMark").querySelector("small").textContent = "Saqlanmoqda…";
+      return api("belgi", { lat: loc.lat, lng: loc.lng, acc: loc.acc, selfi: selfi || "" });
+    }).then(function (s) {
+      render(s); haptic("success");
+      msg("mainMsg", s.msg, s.jarima > 0 && s.status === "KELDI" ? "warn" : "ok");
+    }).catch(function (e) { unbusy(); haptic("error"); msg("mainMsg", e.message, "err"); });
+  }
+
+  $("bMark").onclick = function () {
+    msg("mainMsg", "");
+    if (SELFI) { $("cam").value = ""; $("cam").click(); }   // avval kamera
+    else mark(null);
+  };
+  $("cam").onchange = function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    busy("Rasm tayyorlanmoqda…");
+    shrink(f).then(function (b64) { unbusy(); mark(b64); })
+             .catch(function (e) { unbusy(); msg("mainMsg", e.message, "err"); });
+  };
+
+  // ---------- admin ----------
+  function loadAdmin(showIt) {
+    if (showIt) show("vLoad");
+    api("admin").then(function (d) { renderAdmin(d); if (showIt) show("vAdmin"); })
+      .catch(function (e) { $("errText").textContent = e.message; show("vErr"); });
+  }
+  $("bRefresh").onclick = function (e) { e.preventDefault(); loadAdmin(false); };
+
+  document.querySelectorAll("#tabs button").forEach(function (t) {
+    t.onclick = function () {
+      document.querySelectorAll("#tabs button").forEach(function (x) { x.classList.toggle("on", x === t); });
+      document.querySelectorAll(".tab").forEach(function (x) { x.classList.toggle("hidden", x.id !== t.dataset.t); });
+    };
+  });
+
+  function adminCall(action, extra, onErr) {
+    return api(action, extra).then(function (d) { renderAdmin(d); haptic("success"); return d; })
+      .catch(function (e) { haptic("error"); (onErr || alert)(e.message); throw e; });
+  }
+
+  function renderAdmin(d) {
+    LAST = d;
+    if (FILTER !== "Hammasi" && d.bolimlar.indexOf(FILTER) < 0) FILTER = "Hammasi";
+    $("aWho").textContent = "👤 " + d.admin.name + (d.admin.all ? "" : " · faqat o'z bo'limi");
+    $("aDate").textContent = d.today + (d.dayOff ? " (dam olish)" : "");
+    $("flt").innerHTML = d.bolimlar.length > 1 ? ["Hammasi"].concat(d.bolimlar).map(function (b) {
+      return '<button class="chip' + (b === FILTER ? " on" : "") + '" data-b="' + esc(b) + '">' + esc(b) + "</button>";
+    }).join("") : "";
+    document.querySelectorAll("#flt .chip").forEach(function (c) { c.onclick = function () { FILTER = c.dataset.b; renderAdmin(LAST); }; });
+    var inF = function (w) { return FILTER === "Hammasi" || w.bolim === FILTER; };
+
+    // --- Bugun
+    var nIn = 0, nLate = 0, nNo = 0, h = "";
+    d.list.filter(inF).forEach(function (w, i) {
+      var pill;
+      if (w.status === "RUXSAT") { nNo++; pill = '<span class="pill p-rux">Ruxsat</span>'; }
+      else if (w.status === "KELMADI") { nNo++; pill = '<span class="pill p-no">Kelmadi</span>'; }
+      else if (!w.status) { nNo++; pill = '<span class="pill p-out">Hali yo\'q</span>'; }
+      else {
+        nIn++; if (w.kech > 0) nLate++;
+        pill = w.kech > 0 ? '<span class="pill ' + (w.ruxsat ? 'p-rux' : 'p-late') + '">+' + w.kech + ' daq' + (w.ruxsat ? ' ✓' : '') + '</span>'
+                          : '<span class="pill p-in">Vaqtida</span>';
+      }
+      var btns = "";
+      if (!w.ruxsat && (w.jarima > 0 || !w.status)) btns += '<button class="sbtn rux" data-n="' + esc(w.name) + '">Ruxsat</button>';
+      if (w.qarz > 0) btns += '<button class="sbtn pay" data-i="' + i + '">To\'lov</button>';
+      var times = w.keldi ? w.keldi + (w.ketdi ? " → " + w.ketdi : " → ishda") + (w.joy ? " · " + w.joy : "") : "boshlanish " + (w.start || "—");
+      var photos = (w.selfi1 ? ' <a class="lnk ph" data-u="' + esc(w.selfi1) + '" href="#">📷 keldi</a>' : "") +
+                   (w.selfi2 ? ' <a class="lnk ph" data-u="' + esc(w.selfi2) + '" href="#">📷 ketdi</a>' : "");
+      h += '<div class="row"><div><b>' + esc(w.name) + '</b> <span class="tag">' + esc(w.bolim) + '</span><div class="muted">' + esc(times) +
+           (w.jarima ? " · bugun " + sum(w.jarima) + " so'm" : "") + (w.ruxsat ? " · ruxsat: " + esc(w.ruxsatKim || "bor") : "") +
+           (w.qarz > 0 ? '<br><span class="r">Qarz: ' + sum(w.qarz) + " so'm</span>" : "") + photos +
+           '</div></div><div class="r-right">' + pill + '<div class="btns">' + btns + "</div></div></div>" +
+           '<div class="payform hidden" id="pf' + i + '"><input type="tel" inputmode="numeric" placeholder="Summa, so\'m">' +
+           '<button class="btn" data-n="' + esc(w.name) + '">Saqlash</button></div>';
+    });
+    $("tToday").innerHTML = h ? '<p class="muted" style="margin:12px 0 0">«Ruxsat» — bugungi jarima yozilmaydi. «To\'lov» — to\'langan jarimani yozish.</p>' + h
+                              : '<p class="muted">Xodimlar yo\'q. «Xodimlar» bo\'limidan qo\'shing.</p>';
+    $("sIn").textContent = nIn; $("sLate").textContent = nLate; $("sNo").textContent = nNo;
+
+    document.querySelectorAll("#tToday .rux").forEach(function (btn) {
+      btn.onclick = function () {
+        if (!btn.dataset.ok) { btn.dataset.ok = "1"; btn.textContent = "Tasdiqlash?"; return; }
+        btn.disabled = true; btn.textContent = "…";
+        adminCall("ruxsat", { name: btn.dataset.n }).catch(function () { btn.disabled = false; btn.textContent = "Ruxsat"; });
+      };
+    });
+    document.querySelectorAll("#tToday .pay").forEach(function (btn) {
+      btn.onclick = function () { var f = $("pf" + btn.dataset.i); f.classList.toggle("hidden"); if (!f.classList.contains("hidden")) f.querySelector("input").focus(); };
+    });
+    document.querySelectorAll("#tToday .payform .btn").forEach(function (btn) {
+      btn.onclick = function () {
+        var v = btn.previousElementSibling.value.replace(/\s/g, ""); if (!v) return;
+        btn.disabled = true; btn.textContent = "…";
+        adminCall("tolov", { name: btn.dataset.n, summa: v }).catch(function () { btn.disabled = false; btn.textContent = "Saqlash"; });
+      };
+    });
+    document.querySelectorAll("#tToday .ph").forEach(function (a) { a.onclick = function (e) { e.preventDefault(); open(a.dataset.u); }; });
+
+    // --- Oylik
+    var jq = 0;
+    var m = '<p class="muted">' + d.oy + ' oyi · Qarz — barcha oylar bo\'yicha to\'lanmagan jarima</p><table><tr><th>Xodim</th><th>Kun</th><th>Kech.</th><th>Kelm.</th><th>Soat</th><th>Jarima</th><th>Qarz</th></tr>';
+    d.summary.filter(inF).forEach(function (s) {
+      jq += s.qarz;
+      m += "<tr><td>" + esc(s.name) + "</td><td>" + s.kun + "</td><td>" + s.kech + "</td><td>" + s.kelmadi + "</td><td>" + s.soat +
+           "</td><td>" + sum(s.jarima) + '</td><td class="' + (s.qarz > 0 ? "r" : "") + '">' + sum(s.qarz) + "</td></tr>";
+    });
+    $("tMonth").innerHTML = m + '</table><p class="muted" style="text-align:right">Jami qarz: <b class="r">' + sum(jq) + " so'm</b></p>";
+
+    // --- Xodimlar
+    var sl = '<button class="btn" id="bNew" style="margin:14px 0 6px">＋ Yangi xodim qo\'shish</button>';
+    d.list.filter(inF).forEach(function (w, i) {
+      sl += '<div class="row click" data-i="' + d.list.indexOf(w) + '"><div><b>' + esc(w.name) + '</b> <span class="tag">' + esc(w.bolim) + '</span>' +
+            '<div class="muted">' + esc(w.tel || "raqam yo'q") + " · " + esc(w.start) + (w.end ? "–" + esc(w.end) : "") +
+            (w.joyCfg ? " · " + esc(w.joyCfg) : "") + '</div></div>' +
+            (w.tg ? '<span class="pill p-in">Telegram ✓</span>' : '<span class="pill p-out">kirmagan</span>') + '</div>';
+    });
+    $("staffList").innerHTML = sl;
+    $("bNew").onclick = function () { openForm(null); };
+    document.querySelectorAll("#staffList .row.click").forEach(function (r) { r.onclick = function () { openForm(LAST.list[+r.dataset.i]); }; });
+    var opts = ["Ofis", "Sex", "Montaj", "Servis"].concat(d.bolimlar).filter(function (x, i, a) { return a.indexOf(x) === i; });
+    if (!d.admin.all) opts = d.admin.bolimlar.map(function (b) { return b.charAt(0).toUpperCase() + b.slice(1); });
+    $("bolimList").innerHTML = opts.map(function (o) { return '<option value="' + esc(o) + '">'; }).join("");
+    $("fJoy").innerHTML = '<option value="">Istalgan joyda (Ofis ham, Sex ham)</option>' +
+      d.places.map(function (p) { return '<option value="' + esc(p.name) + '">Faqat: ' + esc(p.name) + "</option>"; }).join("");
+
+    // --- Joylar
+    $("placeList").innerHTML = d.places.length ? d.places.map(function (p) {
+      return '<div class="row"><div><b>📍 ' + esc(p.name) + '</b><div class="muted">' + p.lat.toFixed(5) + ", " + p.lng.toFixed(5) + "</div></div>" +
+             '<span class="pill p-out">' + p.radius + " m</span></div>";
+    }).join("") : '<p class="muted">⚠️ Hali birorta joy saqlanmagan.</p>';
+  }
+
+  // ---------- xodim formasi ----------
+  function openForm(w) {
+    EDIT = w;
+    $("fTitle").textContent = w ? "Tahrirlash: " + w.name : "Yangi xodim";
+    $("fIsm").value = w ? w.name : "";
+    $("fTel").value = w ? w.tel : "+998 ";
+    $("fStart").value = w && w.start ? (w.start.length === 4 ? "0" + w.start : w.start) : "09:00";
+    $("fEnd").value = w && w.end ? (w.end.length === 4 ? "0" + w.end : w.end) : "18:00";
+    $("fBolim").value = w ? w.bolimCfg : (LAST.admin.all ? "" : ($("bolimList").options[0] || {}).value || "");
+    $("fJoy").value = w ? w.joyCfg : "";
+    $("fDel").classList.toggle("hidden", !w); $("fDel").dataset.ok = ""; $("fDel").textContent = "O'chirish";
+    msg("formMsg", "");
+    $("staffList").classList.add("hidden"); $("staffForm").classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+  function closeForm() { $("staffForm").classList.add("hidden"); $("staffList").classList.remove("hidden"); }
+  $("fCancel").onclick = closeForm;
+  $("fSave").onclick = function () {
+    var b = this; b.disabled = true; b.textContent = "Saqlanmoqda…";
+    var x = { old: EDIT ? EDIT.name : "", ism: $("fIsm").value, tel: $("fTel").value, start: $("fStart").value,
+              end: $("fEnd").value, bolim: $("fBolim").value, joy: $("fJoy").value };
+    adminCall("xodimSaqlash", { x: x }, function (e) { msg("formMsg", e, "err"); })
+      .then(function () { closeForm(); }).catch(function () {})
+      .then(function () { b.disabled = false; b.textContent = "Saqlash"; });
+  };
+  $("fDel").onclick = function () {
+    var b = this;
+    if (!b.dataset.ok) { b.dataset.ok = "1"; b.textContent = "Rostdan o'chirilsinmi?"; return; }
+    b.disabled = true;
+    adminCall("xodimOchirish", { name: EDIT.name }, function (e) { msg("formMsg", e, "err"); })
+      .then(function () { closeForm(); }).catch(function () {}).then(function () { b.disabled = false; });
+  };
+
+  // ---------- joy saqlash ----------
+  $("bPlace").onclick = function () {
+    var nm = $("placeName").value.trim();
+    if (!nm) return msg("placeMsg", "Avval joy nomini yozing (masalan: Sex)", "err");
+    msg("placeMsg", "Joylashuv aniqlanmoqda…", "warn");
+    getLoc().then(function (loc) {
+      if (loc.acc > 100) throw new Error("GPS aniqligi past (" + Math.round(loc.acc) + " m). Ochiqroq joyda qayta urinib ko'ring.");
+      return adminCall("joy", { name: nm, lat: loc.lat, lng: loc.lng }, function () {});
+    }).then(function () { msg("placeMsg", "“" + nm + "” joyi saqlandi ✓", "ok"); $("placeName").value = ""; })
+      .catch(function (e) { msg("placeMsg", e.message, "err"); });
+  };
+
+  start();
+</script>
+</body>
+</html>
